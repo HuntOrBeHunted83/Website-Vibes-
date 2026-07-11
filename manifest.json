@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Vibe",
+  "version": "1.0.0",
+
+  "description": "A chrome extension that plays different kinds of music depening on the tab you are on",
+
+  "action": {
+    "default_title": "Click here to customize the settings",
+    "default_popup": "options.html"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "scripting",
+    "storage",
+    "sessions",
+    "alarms"
+  ],
+
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["image/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
