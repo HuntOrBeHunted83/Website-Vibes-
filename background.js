@@ -1,7 +1,9 @@
 let creatingOffscreen;
 
 async function createOffScreenDoc (url) {
+  console.log(chrome.runtime)
   const offscreenUrl = chrome.runtime.getURL('offscreen.html');
+  //const offscreenUrl = "https://live365.com/station/101-SMOOTH-JAZZ-a55660"
   let offscreenDocExists = false;
 
   if ('getContexts' in chrome.runtime) {
@@ -24,7 +26,7 @@ async function createOffScreenDoc (url) {
       creatingOffscreen = chrome.offscreen.createDocument({
         url: 'offscreen.html',
         reasons: ['AUDIO_PLAYBACK'],
-        justification: "",
+        justification: ""
       });
 
       await creatingOffscreen;
@@ -38,14 +40,10 @@ async function createOffScreenDoc (url) {
   chrome.runtime.sendMessage({ type: 'PLAY_AUDIO', url });
 }
 
-
 chrome.runtime.onStartup.addListener(() => {
   createOffScreenDoc(chrome.runtime.getURL('chime.mp3'));
   console.log('Extension started, offscreen document ensured');
 });
-
-
-
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const tab = await chrome.tabs.get(activeInfo.tabId);
@@ -56,12 +54,14 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
 
   try {
-    let pageText = await chrome.tabs.sendMessage(activeInfo.tabId, { type: "PAGE_TEXT" });
-    console.log("Page Text Received: ", pageText.text);
-    setMood(pageText.text)
-
+    let vibe = await chrome.tabs.sendMessage(activeInfo.tabId, { type: "GET_VIBE" });
+    console.log("Vibe Received: ", vibe);
+    //const offscreenUrl = "https://ice.somafm.com/thetrip-128-mp3"
     createOffScreenDoc(chrome.runtime.getURL('songs/believer.mp3'));
+    createOffScreenDoc(offscreenUrl);
   } catch (err) {
     console.log("Could not reach content script:", err.message);
   }
 });
+
+
