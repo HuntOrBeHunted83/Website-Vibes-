@@ -1,4 +1,4 @@
-import {moodCreater, getMood, getMaxVibe, vibeToTrack} from './common.js' ;
+import  {getMood} from './common.js' ;
 
 let creatingOffscreen
 
@@ -62,7 +62,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     let pageText = await chrome.tabs.sendMessage(activeInfo.tabId, { type: "GET_TEXT" });
     console.log("Page Text Recived: ", pageText);
-    const offscreenUrl = getMood(pageText.text)
+    const offscreenUrl = getMood(pageText.text, tab.url)
     // const offscreenUrl = "https://ice.somafm.com/thetrip-128-mp3"
     // createOffScreenDoc(chrome.runtime.getURL('songs/believer.mp3'));
     createOffScreenDoc(offscreenUrl);
