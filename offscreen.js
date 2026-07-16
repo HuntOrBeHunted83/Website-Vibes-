@@ -1,6 +1,10 @@
 let player = null
 
 function playAudio(url) {
+    if (!url){
+        stopAudio()
+    }
+
     if (!player) {
         player = new Audio();
         player.addEventListener('error', (e) => {
@@ -20,13 +24,10 @@ function stopAudio() {
     }
 }
 
-
-
-
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'PLAY_AUDIO') {
-    playAudio(message.url);
+        playAudio(message.url);
     } else if (message.type === 'STOP_AUDIO') {
-    stopAudio();
+        stopAudio();
     }
 });

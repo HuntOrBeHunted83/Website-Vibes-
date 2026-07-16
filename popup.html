@@ -1,11 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
+
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="utf-8" />
+<title>Tab Vibe </title>
+<style>
+body { font-family: Arial, sans-serif; width: 300px; padding: 12px; }
+h1 { font-size: 20px; margin: 0 0 8px 0;}
+label { display:block; margin:8px 0; }
+select, button { width:100%; margin-top:6px; }
+</style>
 </head>
 <body>
-    
+<h1>Tab Vibe - Custom Music</h1>
+    <div class="row">
+      <label for="trackSelect">Select an audio track</label>
+      <select id="trackSelect">
+        <option value="">Loading tracks...</option>
+      </select>
+    </div>
+<script src="popup.js"></script>
 </body>
 </html>

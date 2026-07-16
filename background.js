@@ -1,4 +1,4 @@
-import  {getMood} from './common.js' ;
+import  {getAllVibes, getAudioFromVibe, updateUrlToAudioMap, getVibeFromUrlAndText} from './common.js' ;
 
 let creatingOffscreen
 
@@ -62,13 +62,29 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     let pageText = await chrome.tabs.sendMessage(activeInfo.tabId, { type: "GET_TEXT" });
     console.log("Page Text Recived: ", pageText);
-    const offscreenUrl = getMood(pageText.text, tab.url)
-    // const offscreenUrl = "https://ice.somafm.com/thetrip-128-mp3"
-    // createOffScreenDoc(chrome.runtime.getURL('songs/believer.mp3'));
-    createOffScreenDoc(offscreenUrl);
+    const offscreenUrl = getVibeFromUrlAndText(pageText.text, tab.url)
+    if (offscreenUrl)
+      createOffScreenDoc(offscreenUrl);
   } catch (err) {
     console.log("Could not reach content script:", err.message);
   }
 });
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "GET_TRACKS") {
+    console.log("onMessage", getAllVibes(message.tabUrl))
+    // Only send id/name to the popup — it doesn't need the raw URLs.
+    sendResponse({
+      tracks: getAllVibes(message.tabUrl),
+    });
+    return; // synchronous response, no need to return true
+  }else if (message.type === "SAVE_AUDIO"){
+    console.log("saveSettings", message.tabUrl, message.trackSelect)
+    updateUrlToAudioMap(message.tabUrl,message.trackSelect)
+    chrome.runtime.sendMessage({ type: 'PLAY_AUDIO', url: getAudioFromVibe(message.trackSelect)});
+  }
+})
+
 
 

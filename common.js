@@ -1,4 +1,4 @@
-export const moodCreater = {
+export const vibeToWordsMap = {
     store: ["shop", "cart", "checkout", "reviews", "price", "shipping", "payment", "sale", "discount", "product"],
     news: ["headline", "news", "article", "editor", "journalist", "media", "archive", "breaking", "report", "columnist"],
     socialMedia: ["likes", "comment", "follow", "feed", "share", "post", "hashtag", "story", "notification", "profile"],
@@ -12,7 +12,7 @@ export const moodCreater = {
     chatbot: ["assistant", "conversation", "prompt", "response", "message", "chat", "AI", "query", "session", "reply"]
 };
 
-const audioTrackStorage = {
+const vibeToAudioMap = {
   store: "https://ice.somafm.com/poptron-128-mp3",
   news: "https://ice.somafm.com/sf1033-128-mp3",
   socialMedia: "https://ice.somafm.com/indiepop-128-mp3",
@@ -24,11 +24,12 @@ const audioTrackStorage = {
   food: "https://ice.somafm.com/bossa-128-mp3",
   entertainment: "https://ice.somafm.com/seventies-128-mp3",
   chatbot: "https://ice.somafm.com/beatblender-128-mp3",
+  noAudio: "",
 };
 
 const DEFAULT_TRACK = "https://ice.somafm.com/groovesalad-128-mp3";
 
-export const specialWebSites = {
+const urlToAudioMap = {
     "amazon.com": "store",
     "etsy.com": "store",
     "target.com": "store",
@@ -96,66 +97,62 @@ export const specialWebSites = {
     "perplexity.com": "chatbot"
 };
 
-function extractHostname(url) {
+export function extractHostname(url) {
     try {
         const hostname = new URL(url).hostname;
         return hostname.replace(/^www\./, "");
     } catch (e) {
+        console.log("Failed extractHostname", url, e)
         return null;
     }
 }
 
+export function updateUrlToAudioMap(website, audio){
+    console.log("updateUrlToAudioMap ", urlToAudioMap, website, audio)
+    urlToAudioMap[website] =  audio
+}
 
+export function getVibeFromUrlAndText(text, url){
 
-
-export function getMood(text, url){
-
-    let matchedVibe = null;
     let audioTrack = null;
 
-    const hostname = extractHostname(url);
+    const hostname = extractHostname(url)
 
-    for (const [key, value] of Object.entries(specialWebSites)) {
-        if (hostname === key || hostname.endsWith("." + key)) {
-            matchedVibe = value;
-            console.log("Host Name Matched")
-            break;
-        }
-    }
-    
+    let matchedVibe = getVibeFromTabUrl(hostname)
+
     if (matchedVibe){
         audioTrack = getAudioFromVibe(matchedVibe)
     }else{
-        let moodSorter = {}
+        let vibeSorter = {}
         let words = text.toLowerCase().trim().split(/\s+/).map(w => w.replace(/[^a-z0-9]/g, ""));;
         //console.log(words)
         for (let i = 0; i < words.length; i = i + 1 ) {
             // console.log(i, " ", words[i])
-            for (const [key, value] of Object.entries(moodCreater)) {      
+            for (const [key, value] of Object.entries(vibeToWordsMap)) {      
             // console.log(key, " ", value)
                 if (value.includes(words[i])){
-                    console.log("print ", words[i], "  ",  key, " " ,moodCreater[key])
-                    if (!moodSorter[key]){
-                    moodSorter[key] = 1
-                    //console.log("No match found yet, set to 1: " + key + moodSorter[key])
+                    console.log("print ", words[i], "  ",  key, " " ,vibeToWordsMap[key])
+                    if (!vibeSorter[key]){
+                    vibeSorter[key] = 1
+                    //console.log("No match found yet, set to 1: " + key + vibeSorter[key])
                     }else{
-                    moodSorter[key] = moodSorter[key] + 1
-                    //console.log("Match Found, increased value by 1 " + key + moodSorter[key])
+                    vibeSorter[key] = vibeSorter[key] + 1
+                    //console.log("Match Found, increased value by 1 " + key + vibeSorter[key])
                     }
                 }
             }
         }
-        console.log("moodSorter", moodSorter)
-        let maxVibe = getMaxVibe(moodSorter)
+        console.log("getVibeFromUrlAndText", vibeSorter)
+        let maxVibe = getMaxVibe(vibeSorter)
         audioTrack = getAudioFromVibe(maxVibe)
     }    
     return audioTrack 
 }
 
-function getMaxVibe(moodSorter){
+function getMaxVibe(vibeSorter){
   let bigKey
   let bigValue = 0
-  for (const [key,value] of Object.entries(moodSorter)) {
+  for (const [key,value] of Object.entries(vibeSorter)) {
     if (bigValue < value){
       bigKey = key
       bigValue = value
@@ -164,12 +161,37 @@ function getMaxVibe(moodSorter){
   return bigKey
 }
 
+export function getAllVibes(url){
+    let vibe = getVibeFromTabUrl(url)
+    let vibes = Object.keys(vibeToAudioMap)
 
-function getAudioFromVibe(vibe){
+    if (vibe){
+        const updatedVibes = vibes.filter(item => item !== 'vibe');
+        updatedVibes.unshift(vibe)
+        return updatedVibes
+    }else{
+        vibes.unshift("")
+        return vibes
+    }
+}
+
+
+export function getAudioFromVibe(vibe){
     if (vibe) {
-        return audioTrackStorage[vibe]
+        return vibeToAudioMap[vibe]
     } else {
         return DEFAULT_TRACK
+    }    
+}
+
+function getVibeFromTabUrl(hostname){
+    let matchedVibe = null
+    for (const [key, value] of Object.entries(urlToAudioMap)) {
+        if (hostname === key || hostname.endsWith("." + key)) {
+            matchedVibe = value;
+            console.log("getVibeFromTabUrl", hostname, matchedVibe)
+            break;
+        }
     }
-     
+    return matchedVibe
 }
