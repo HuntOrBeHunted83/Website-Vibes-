@@ -3,18 +3,19 @@ let player = null
 function playAudio(url) {
     if (!url){
         stopAudio()
+        return
     }
 
     if (!player) {
         player = new Audio();
         player.addEventListener('error', (e) => {
-        console.error('Audio playback failed:', e);
+        console.error('Audio playback failed:', url, e);
         });
     }
     player.src = url;
     player.currentTime = 0;
     player.loop = true;   
-    player.play().catch((err) => console.error('play() rejected:', err));
+    player.play().catch((err) => console.error('play() rejected:', url, err));
 }
 
 function stopAudio() {

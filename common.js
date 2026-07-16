@@ -166,7 +166,7 @@ export function getAllVibes(url){
     let vibes = Object.keys(vibeToAudioMap)
 
     if (vibe){
-        const updatedVibes = vibes.filter(item => item !== 'vibe');
+        const updatedVibes = vibes.filter(item => item !== vibe);
         updatedVibes.unshift(vibe)
         return updatedVibes
     }else{

@@ -1,5 +1,5 @@
 import  {getAllVibes, getAudioFromVibe, updateUrlToAudioMap, getVibeFromUrlAndText} from './common.js' ;
-
+let currentActiveTabId = null;
 let creatingOffscreen
 
 async function createOffScreenDoc (url) {
@@ -29,7 +29,7 @@ async function createOffScreenDoc (url) {
       creatingOffscreen = chrome.offscreen.createDocument({
         url: 'offscreen.html',
         reasons: ['AUDIO_PLAYBACK'],
-        justification: ""
+        justification: "Plays background music matching the vibe of the active tab"
       });
 
       await creatingOffscreen;
@@ -46,14 +46,31 @@ async function createOffScreenDoc (url) {
   console.log("End self.clients", clients, self.clients)
 }
 
-chrome.runtime.onStartup.addListener(() => {
-  createOffScreenDoc(chrome.runtime.getURL('chime.mp3'));
-  console.log('Extension started, offscreen document ensured');
+chrome.tabs.onUpdated.addListener(async(tabId, changeInfo, tab) => {
+  console.log("onUpdated page not ready", tab.status , tab.active, tab.focused)
+  if (tab.status !== "complete" || !tab.active ) {
+
+    return;
+  }
+
+  currentActiveTabId = tabId;
+
+  try {
+    let pageText = await chrome.tabs.sendMessage(tabId, { type: "GET_TEXT" });
+    console.log("Page Text Recived: ", pageText);
+    const offscreenUrl = getVibeFromUrlAndText(pageText.text, tab.url)
+    if (offscreenUrl)
+      createOffScreenDoc(offscreenUrl);
+  } catch (err) {
+    console.log("Could not reach content script:", err.message);
+  }
 });
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  currentActiveTabId = activeInfo.tabId;
   const tab = await chrome.tabs.get(activeInfo.tabId);
 
+  console.log("onActivated ", activeInfo)
   if (tab.status !== "complete" ) {
     console.log("page not ready")
     return;
@@ -82,9 +99,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }else if (message.type === "SAVE_AUDIO"){
     console.log("saveSettings", message.tabUrl, message.trackSelect)
     updateUrlToAudioMap(message.tabUrl,message.trackSelect)
-    chrome.runtime.sendMessage({ type: 'PLAY_AUDIO', url: getAudioFromVibe(message.trackSelect)});
+    createOffScreenDoc(getAudioFromVibe(message.trackSelect));
   }
 })
 
+chrome.tabs.onRemoved.addListener((tabId) => {
+  console.log("onRemoved", tabId, currentActiveTabId)
+    if (tabId === currentActiveTabId) {
+          chrome.runtime.sendMessage({ type: 'STOP_AUDIO' });
+ 
+    }
+});
 
-
+chrome.tabs.onCreated.addListener((tab) => {
+    console.log("onCreated", tab)
+    chrome.runtime.sendMessage({ type: 'STOP_AUDIO' });
+});
